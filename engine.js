@@ -47,6 +47,7 @@ export function suggestChips(chips, amount, n = 1) {
 
 // ---------- Spiel anlegen ----------
 // cfg: { mode:'tournament'|'cash', names:[...], chips, tournament:{buyIn(Rp), startStack, levels, levelMin, rebuy:{on,untilLevel,max}, payout:[%]},
+//        (tournament zusätzlich: payoutAuto = Verteilung folgt der Anzahl Personen, late:{on,untilLevel} = Nachmelden)
 //        cash:{points, rappen, sb, bb, minBuy(Rp), maxBuy(Rp), firstBuy(Rp)} }
 export function newGame(cfg, rnd = Math.random) {
   if (cfg.names.length < 2) err('Es braucht mindestens 2 Personen.');
@@ -306,7 +307,7 @@ export function rebuy(g, id) {
   if (p.stack > 0 || (g.hand && !g.hand.done)) err('Rebuy geht nur mit 0 Chips zwischen den Händen.');
   p.stack = g.t.startStack; p.paid += g.t.buyIn; p.rebuys++; p.status = 'active';
   g.issued += g.t.startStack;
-  g.hint = `${p.name} kauft nach (Rebuy): zahlt ${chf(g.t.buyIn)} und bekommt ${g.t.startStack} Chips.`;
+  g.hint = `${p.name} kauft nach (Rebuy): zahlt ${chf(g.t.buyIn)} und bekommt ${g.t.startStack} Chips. Preistopf neu: ${chf(prizePool(g))}.`;
   return g;
 }
 export function eliminate(g, id) {
@@ -378,14 +379,22 @@ export function cashOut(g, id) {
   p.out += r; g.issued -= p.stack; p.stack = 0; p.status = 'left';
   return g;
 }
+export const canLateJoin = (g) => !!(g.t && g.t.late && g.t.late.on && g.timer.level + 1 <= g.t.late.untilLevel);
+// Cash: kauft für `rappen` ein. Turnier: Nachmelden mit Buy-in und Startstack.
 export function addPlayer(g, nm, afterId, rappen) {
   between(g);
+  if (g.mode === 'tournament' && !canLateJoin(g)) err('Nachmelden ist nicht (mehr) erlaubt.');
   nm = String(nm || '').trim().slice(0, 20);
   if (!nm) err('Bitte einen Namen eingeben.');
   if (g.players.some((p) => p.name.toLowerCase() === nm.toLowerCase())) err(`«${nm}» gibt es schon.`);
   const id = 'p' + (Math.max(...g.players.map((p) => +p.id.slice(1))) + 1);
   const at = afterId ? g.players.findIndex((p) => p.id === afterId) + 1 : g.players.length;
   g.players.splice(at, 0, { id, name: nm, stack: 0, status: 'paused', paid: 0, out: 0, rebuys: 0, place: null });
+  if (g.mode === 'tournament') {
+    const p = P(g, id); p.stack = g.t.startStack; p.paid = g.t.buyIn; p.status = 'active'; g.issued += g.t.startStack;
+    g.hint = `${nm} meldet nach: zahlt ${chf(g.t.buyIn)} und bekommt ${g.t.startStack} Chips. Preistopf neu: ${chf(prizePool(g))}.`;
+    return g;
+  }
   try { buyIn(g, id, rappen); } catch (e) { g.players.splice(at, 1); throw e; }
   g.hint = `${nm} setzt sich dazu. ` + g.hint;
   return g;
@@ -414,6 +423,15 @@ export function acceptDiff(g) {
 }
 
 // ---------- Abrechnung ----------
+export const prizePool = (g) => g.players.reduce((s, p) => s + p.paid, 0);
+// Aktuelle Verteilung in %: folgt der Anzahl Personen (inkl. Nachgemeldeten), solange sie nicht von Hand gesetzt wurde
+export const payoutOf = (g) => (g.t.payoutAuto ? suggestPayout(g.players.length) : g.t.payout);
+// Preisgeld pro Platz in Rappen: ganze Franken abgerundet, Rest an Platz 1
+export function prizes(pool, payout) {
+  const out = payout.map((pc) => Math.floor((pool * pc) / 100 / 100) * 100);
+  if (out.length) out[0] += pool - out.reduce((a, b) => a + b, 0);
+  return out;
+}
 export function results(g) {
   if (g.mode === 'cash') {
     const rows = g.players.map((p) => {
@@ -426,11 +444,9 @@ export function results(g) {
   const rest = g.players.filter((p) => p.status !== 'out').sort((a, b) => b.stack - a.stack);
   const place = new Map(g.players.filter((p) => p.status === 'out').map((p) => [p.id, p.place]));
   rest.forEach((p, i) => place.set(p.id, i + 1));
-  const pool = g.players.reduce((s, p) => s + p.paid, 0);
-  const prizes = g.t.payout.map((pc) => Math.floor((pool * pc) / 100 / 100) * 100); // ganze Franken
-  if (prizes.length) prizes[0] += pool - prizes.reduce((a, b) => a + b, 0);
+  const pool = prizePool(g), pz = prizes(pool, payoutOf(g));
   const rows = g.players.map((p) => {
-    const pl = place.get(p.id), out = prizes[pl - 1] || 0;
+    const pl = place.get(p.id), out = pz[pl - 1] || 0;
     return { id: p.id, name: p.name, place: pl, paid: p.paid, out, net: out - p.paid, rebuys: p.rebuys };
   }).sort((a, b) => a.place - b.place);
   return { rows, pool, sum: rows.reduce((s, r) => s + r.net, 0) };

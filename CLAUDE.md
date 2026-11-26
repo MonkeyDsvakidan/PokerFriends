@@ -22,11 +22,14 @@ GitHub Pages (Gratis-Plan) geht nur mit öffentlichen Repos. Vom Nutzer am 26.11
 - Scheiden mehrere in derselben Hand aus, bekommt den schlechteren Platz, wer zu Beginn weniger Chips hatte (bei Gleichstand: Reihenfolge, kein geteilter Platz).
 - Color-up-Hinweis nur für Farben, die auch in allen späteren Levels nicht mehr gebraucht werden. Die App rechnet nach einem Color-up nicht selbst um → danach «Chips zählen».
 - Fold wird nur angezeigt, wenn etwas offen ist (sonst Check).
+- Preisgeld-Verteilung folgt automatisch der Anzahl Personen (`suggestPayout`, auch nach Nachmelden), bis jemand die Prozente von Hand ändert (`payoutAuto`). Preistopf = alle Buy-ins + Rebuys + Nachmeldungen.
+- Nachmelden im Turnier (optional, bis Level X): Buy-in zahlen, Startstack bekommen, Sitz frei wählbar.
+- Einrichtung: Werte unter den Feldern (`data-live`, Funktion `live()`) werden bei jeder Eingabe neu gerechnet, ohne die Felder neu zu zeichnen.
 - Preisgeld auf ganze Franken abgerundet, Rest an Platz 1. Zahlungen: zuerst gleich grosse Beträge direkt, dann grösster Schuldner an grössten Gläubiger (höchstens n−1 Zahlungen).
 
 ## Testen
 - Spiellogik: `node --test` (oder `npm test`), läuft auch automatisch bei jedem Pull Request (`.github/workflows/test.yml`).
-- Oberfläche: Startseiten-Repo und dieses Repo nebeneinander lokal ausliefern, damit `/icon-180.png` und `/manifest.webmanifest` gefunden werden, z. B. Ordner `site/` mit dem Inhalt von `monkeydsvakidan.github.io` und darin `Poker` → dieses Repo, dann `python3 -m http.server` in `site/` und `http://localhost:8000/PokerFriends/` bei 375 px, Querformat (844×390) und 1280 px ansehen. Durchspielen: Turnier mit Raise/Showdown/Split, Rückgängig, Neu laden (Stand bleibt), Cash mit All-in, Nachkauf, neue Person, Abrechnung.
+- Oberfläche: Startseiten-Repo und dieses Repo nebeneinander lokal ausliefern, damit `/icon-180.png` und `/manifest.webmanifest` gefunden werden, z. B. Ordner `site/` mit dem Inhalt von `monkeydsvakidan.github.io` und darin `PokerFriends` → dieses Repo, dann `python3 -m http.server` in `site/` und `http://localhost:8000/PokerFriends/` bei 375 px, Querformat (844×390) und 1280 px ansehen. Durchspielen: Turnier mit Raise/Showdown/Split, Rückgängig, Neu laden (Stand bleibt), Cash mit All-in, Nachkauf, neue Person, Abrechnung.
 
 ## Regeln für die Arbeit
 - Änderungen als Pull Request, nie direkt auf `main`, ein PR pro Thema.
