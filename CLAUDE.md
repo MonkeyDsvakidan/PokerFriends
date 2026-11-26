@@ -39,7 +39,7 @@ GitHub Pages (Gratis-Plan) geht nur mit öffentlichen Repos. Vom Nutzer am 26.11
 
 ## Design-Brief
 - Zielgruppe: Aladin und Freunde am Pokertisch, Handy oder Tablet liegt in der Mitte, Bedienung mit einer Hand, oft im Halbdunkel.
-- Stil «Kartentisch bei Nacht»: nur dunkel, Pot-Fläche in dunklem Filzgrün, sonst neutrale dunkle Grüntöne. Vorbild: die anderen GameMaster-Spiele (gleiche Leiste, Maske oben links) und die Anzeige eines Turnier-Blind-Timers.
+- Stil «Kartentisch bei Nacht»: nur dunkel, Pot-Fläche in dunklem Filzgrün, sonst neutrale dunkle Grüntöne. Hintergrund: blasses Muster aus Pik/Herz/Karo/Kreuz (`muster.svg`, Deckkraft 6 %, wie das Masken-Muster der Startseite) und ein Hauch Filzgrün oben; Flächen darauf bleiben deckend. Vorbild: die anderen GameMaster-Spiele (gleiche Leiste, Maske oben links) und die Anzeige eines Turnier-Blind-Timers.
 - Farben (Tokens oben in `styles.css`): Akzent Mint `#3ddc97` (Hauptaktion, wer dran ist, Poker-Farbe in der GameMaster-Leiste); Bernstein `#ffb347` nur für All-in; Rot `#ff7a7a` nur für Abweichungen/Fehler; Dealer-Button weiss wie echt.
 - Schriften wie GameMaster: Barlow (Text), Barlow Condensed (Titel), Bungee (Zahlen und Knöpfe). Icons: Linien-SVGs, Strich 1.75.
 - Abstände 4/8/12/16/24/32/48, Radien 8/14. Knöpfe mind. 48 px, Aktionsknöpfe 60 px, unten im Daumenbereich.

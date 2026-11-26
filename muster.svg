@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <!-- Hintergrund-Muster: Pik, Herz, Karo, Kreuz (eigene Formen), sehr blass; Kachel 160 px, versetzt angeordnet -->
+  <g fill="#fff" fill-opacity=".06">
+    <!-- Pik -->
+    <path transform="translate(14 14) rotate(-12 12 12)" d="M12 2s-8 6-8 11a4 4 0 0 0 7 2.6V18l-2 4h6l-2-4v-2.4A4 4 0 0 0 20 13c0-5-8-11-8-11z"/>
+    <!-- Herz -->
+    <path transform="translate(96 26) rotate(10 12 12)" d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/>
+    <!-- Karo -->
+    <path transform="translate(40 92) rotate(8 12 12)" d="M12 2l7 10-7 10-7-10z"/>
+    <!-- Kreuz -->
+    <g transform="translate(116 104) rotate(-10 12 12)"><circle cx="12" cy="7" r="3.8"/><circle cx="7.4" cy="13.2" r="3.8"/><circle cx="16.6" cy="13.2" r="3.8"/><path d="M11 12h2v7l2.5 3h-7l2.5-3z"/></g>
+  </g>
+</svg>

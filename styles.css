@@ -19,7 +19,9 @@
 }
 *{box-sizing:border-box}
 html{background:var(--bg)}
-body{margin:0;min-height:100dvh;background:var(--bg);color:var(--fg);font:400 16px/1.45 var(--f-text);-webkit-tap-highlight-color:transparent}
+/* Hintergrund: blasses Muster aus den Kartensymbolen (wie das Masken-Muster der GameMaster-Startseite) und
+   ein Hauch Filzgrün oben, wie Licht über dem Spieltisch. Karten/Flächen darauf bleiben deckend, damit alles lesbar bleibt. */
+body{margin:0;min-height:100dvh;background:radial-gradient(120% 55% at 50% 0%,rgb(61 220 151 / .07),transparent 70%) fixed,url(muster.svg) 0 0/160px 160px repeat,var(--bg);color:var(--fg);font:400 16px/1.45 var(--f-text);-webkit-tap-highlight-color:transparent}
 h1,h2,h3,p{margin:0}
 h2,.h2{font:700 1.5rem/1.15 var(--f-title)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
