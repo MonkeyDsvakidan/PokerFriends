@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Poker · GameMaster</title>
+  <meta name="description" content="Spielleiter für Texas Hold'em mit echten Chips: Reihenfolge, Einsätze, Pots und Abrechnung.">
+  <meta name="theme-color" content="#0f1412">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Home-Bildschirm: installiert die gemeinsame GameMaster-App (Manifest und Symbol aus dem Repo monkeydsvakidan.github.io) -->
+  <meta name="apple-mobile-web-app-title" content="GameMaster">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700&family=Bungee&display=swap">
+  <link rel="stylesheet" href="./styles.css?v=1">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+    <!-- GameMaster-Leiste: Icons aus design/gamemaster-muster.html (Repo MusicBattle), Poker-Chip neu im gleichen Stil -->
+    <symbol id="gm-mb" viewBox="0 0 24 24"><path d="M6 15.5V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-1.5"/><path d="M5.5 15.5H14a2 2 0 0 0 2-2V8A5 5 0 0 0 11 3H8.5A4.5 4.5 0 0 0 4 7.5V9"/><path d="M4 9a2 2 0 0 0-2 2v1a3.5 3.5 0 0 0 3.5 3.5"/><path d="M4 9.5c2 0 3.5 1 3.5 3"/><ellipse cx="19" cy="19" rx="2" ry="1.6"/><path d="M21 19v-8l1.5 1"/></symbol>
+    <symbol id="gm-quiz" viewBox="0 0 24 24"><path d="M3 15a5 5 0 0 1 10 0"/><rect x="1.5" y="15" width="13" height="4.5" rx="1.3"/><path d="M8 7.5V6M4.3 9.2l-.9-.9M11.7 9.2l.9-.9"/><ellipse cx="19" cy="18.5" rx="2" ry="1.6"/><path d="M21 18.5v-8l1.5 1"/></symbol>
+    <symbol id="gm-tg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="gm-poker" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></symbol>
+    <symbol id="gm-tools" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/></symbol>
+  </svg>
+  <div class="shell">
+    <header class="top">
+      <a class="brand" href="/" aria-label="Zur Übersicht aller Spiele"><img src="/icon-180.png" alt="" width="40" height="40"><span><small>GameMaster</small><b>Poker</b></span></a>
+      <div class="topact" id="topAct"></div>
+    </header>
+    <main id="app"><p class="loading">Lade …</p></main>
+  </div>
+  <nav class="gmbar" id="gmBar" aria-label="GameMaster">
+    <a href="/MusicBattle/?mode=1v1" data-k="mb"><svg aria-hidden="true"><use href="#gm-mb"/></svg>Music 1v1</a>
+    <a href="/MusicBattle/?mode=quiz" data-k="quiz"><svg aria-hidden="true"><use href="#gm-quiz"/></svg>Musik-Quiz</a>
+    <a href="/TotalGuesser/" data-k="tg"><svg aria-hidden="true"><use href="#gm-tg"/></svg>TotalGuesser</a>
+    <a href="/PokerFriends/" data-k="poker" aria-current="page"><svg aria-hidden="true"><use href="#gm-poker"/></svg>Poker</a>
+    <a href="/#tools" data-k="tools"><svg aria-hidden="true"><use href="#gm-tools"/></svg>Tools</a>
+  </nav>
+  <dialog id="dlg"></dialog>
+  <script type="module" src="./app.js?v=1"></script>
+</body>
+</html>
