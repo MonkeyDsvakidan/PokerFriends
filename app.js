@@ -54,9 +54,18 @@ function undo() {
 }
 
 // ---------- Setup ----------
+// Abend-Rangliste (GameMaster, /abend.js der Startseite): Hat die Gruppe heute Abend eben ein anderes Spiel beendet,
+// stehen deren Namen schon drin. Poker zählt selbst nicht in die Rangliste. Fehlt /abend.js, gilt das letzte Setup.
+function eveningGroup() {
+  try {
+    const games = window.GMAbend?.load().games || [];
+    const names = (games[games.length - 1]?.places || []).map((p) => String(p.name).slice(0, 20)).slice(0, 9);
+    return names.length >= 2 ? [...names, ...Array(Math.max(0, 3 - names.length)).fill('')] : null;
+  } catch { return null; }
+}
 function newSetup(mode, prev) {
   return {
-    mode, names: prev?.names?.filter(Boolean).length ? prev.names.filter(Boolean) : ['', '', ''],
+    mode, names: eveningGroup() || (prev?.names?.filter(Boolean).length ? prev.names.filter(Boolean) : ['', '', '']),
     chips: prev?.chips || structuredClone(E.DEFAULT_CHIPS),
     buyIn: '20', startStack: '2000', levelMin: '20', levels: structuredClone(E.DEFAULT_LEVELS).map((l) => ({ sb: String(l.sb), bb: String(l.bb) })),
     rebuyOn: false, rebuyUntil: '4', rebuyMax: '1', lateOn: false, lateUntil: '2', payout: null,
