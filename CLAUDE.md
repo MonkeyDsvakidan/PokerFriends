@@ -11,6 +11,7 @@ GitHub Pages (Gratis-Plan) geht nur mit öffentlichen Repos. Vom Nutzer am 26.11
 - Statisches HTML/CSS/JS ohne Build-Step und ohne Abhängigkeiten. Push auf `main` = live (GitHub Pages, «Deploy from a branch», `main` / root).
 - `engine.js`: alle Regeln als reine Funktionen auf einem JSON-Spielstand (Reihenfolge, erlaubte Aktionen, Min-Raise, Pots/Side-Pots, Split, Ausscheiden, Nachkauf, Abrechnung). **Regeln nur hier ändern**, nie in `app.js`.
 - `app.js`: Oberfläche. Jede Spielaktion läuft über `run()` auf einer Kopie des Stands (bei Fehler bleibt alles unverändert) und legt einen Rückgängig-Schritt an.
+- Abend-Namen (GameMaster, 26.11.2026): `index.html` lädt `/abend.js` der Startseite. Beim Einrichten (`newSetup`) stehen die Namen der Gruppe aus dem letzten Spiel des Abends (z. B. Music 1v1, TotalGuesser) schon drin, sonst wie bisher die des letzten Pokerspiels. Poker trägt nichts in die Abend-Rangliste ein (Entscheid des Nutzers).
 - Speicher: `localStorage` Schlüssel `poker-spielleiter-v1` (`{game, undo, setup, showChf}`). Beim Ändern des Formats `v` im Spielstand erhöhen und alte Stände sauber verwerfen oder umwandeln.
 - Beträge: Geld immer in **Rappen** (Ganzzahl), Chips in **Punkten** (Ganzzahl). Anzeige über `chf()` und `pts()` (Schweizer Format 1’000).
 - Cache: nach Änderungen `?v=` in `index.html` (CSS und `app.js`) und im Import in `app.js` (`engine.js?v=`) erhöhen.
