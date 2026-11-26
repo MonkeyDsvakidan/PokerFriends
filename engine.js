@@ -317,7 +317,7 @@ export function eliminate(g, id) {
   g.log.push(`${p.name} scheidet aus (Platz ${p.place})`);
   g.hint = (g.hint ? g.hint + ' · ' : '') + `${p.name} scheidet aus: Platz ${p.place}.`;
   const left = g.players.filter((q) => q.status !== 'out');
-  if (left.length === 1) { left[0].place = 1; g.hint += ` ${left[0].name} gewinnt das Turnier!`; }
+  if (left.length === 1) { left[0].place = 1; g.hint += ` ${left[0].name} gewinnt das Turnier.`; }
   return g;
 }
 
