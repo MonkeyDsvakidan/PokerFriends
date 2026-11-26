@@ -19,7 +19,9 @@
 }
 *{box-sizing:border-box}
 html{background:var(--bg)}
-body{margin:0;min-height:100dvh;background:var(--bg);color:var(--fg);font:400 16px/1.45 var(--f-text);-webkit-tap-highlight-color:transparent}
+/* Hintergrund: blasses Muster aus den Kartensymbolen (wie das Masken-Muster der GameMaster-Startseite).
+   Kein Farbschleier (unslop); Flächen darauf bleiben deckend, damit alles lesbar bleibt. */
+body{margin:0;min-height:100dvh;background:url(muster.svg) 0 0/160px 160px repeat,var(--bg);color:var(--fg);font:400 16px/1.45 var(--f-text);-webkit-tap-highlight-color:transparent}
 h1,h2,h3,p{margin:0}
 h2,.h2{font:700 1.5rem/1.15 var(--f-title)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -39,6 +41,7 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.75;str
 .brand small{font:600 .7rem/1 var(--f-text);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .brand b{font:700 1.5rem/1.05 var(--f-title)}
 .topact{display:flex;gap:var(--s2)}
+.topact .btn.ghost{background:var(--surface)}
 
 /* Knöpfe */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);min-height:48px;padding:0 var(--s4);border-radius:var(--r-s);
@@ -122,12 +125,12 @@ input[type=checkbox]{width:24px;height:24px;accent-color:var(--accent)}
 .bd.d{background:var(--chip-d);color:var(--on-chip-d);border-color:transparent}
 .bd.bb,.bd.sb{color:var(--fg)}
 .felt{display:grid;gap:var(--s1);justify-items:center;text-align:center;padding:var(--s4);border-radius:var(--r-m);background:var(--felt);border:1px solid var(--felt-line)}
-.felt .street{font:600 .8rem/1 var(--f-text);letter-spacing:.1em;text-transform:uppercase;color:#bfe3d2}
+.felt .street{font:600 .9rem/1.2 var(--f-text);color:#bfe3d2}
 .felt .pot{font:400 2rem/1.1 var(--f-num)}
 .felt .side{font-size:.9rem;color:#cfe8dc}
 .hint{padding:var(--s3) var(--s4);border-radius:var(--r-m);background:var(--surface-2);border:1px solid var(--line);font-weight:600;font-size:1.05rem}
 .hint small{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
-.actions{position:sticky;bottom:calc(var(--gmbar-h) + var(--s2));display:grid;gap:var(--s3);padding:var(--s4);border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line-strong);box-shadow:0 -8px 24px rgb(0 0 0 / .45)}
+.actions{position:sticky;bottom:calc(var(--gmbar-h) + var(--s2));display:grid;gap:var(--s3);padding:var(--s4);border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line-strong)}
 .who{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3)}
 .who b{font:700 1.9rem/1 var(--f-title)}
 .who b em{font-style:normal;color:var(--accent)}
