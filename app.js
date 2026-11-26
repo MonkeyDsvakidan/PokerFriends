@@ -1,5 +1,5 @@
 // Poker-Spielleiter – Oberfläche. Die Regeln stehen in engine.js; hier nur Anzeige, Eingaben und Speichern.
-import * as E from './engine.js?v=1';
+import * as E from './engine.js?v=2';
 
 const KEY = 'poker-spielleiter-v1';
 const UNDO_MAX = 25;
@@ -59,7 +59,7 @@ function newSetup(mode, prev) {
     mode, names: prev?.names?.filter(Boolean).length ? prev.names.filter(Boolean) : ['', '', ''],
     chips: prev?.chips || structuredClone(E.DEFAULT_CHIPS),
     buyIn: '20', startStack: '2000', levelMin: '20', levels: structuredClone(E.DEFAULT_LEVELS).map((l) => ({ sb: String(l.sb), bb: String(l.bb) })),
-    rebuyOn: false, rebuyUntil: '4', rebuyMax: '1', payout: null,
+    rebuyOn: false, rebuyUntil: '4', rebuyMax: '1', lateOn: false, lateUntil: '2', payout: null,
     cPoints: '100', cChf: '1', sb: '10', bb: '20', minBuy: '10', maxBuy: '50', firstBuy: '20',
   };
 }
@@ -79,7 +79,8 @@ function buildCfg(st) {
     const t = { buyIn: rp(st.buyIn), startStack: int(st.startStack), levelMin: int(st.levelMin),
       levels: st.levels.map((l) => ({ sb: int(l.sb), bb: int(l.bb) })),
       rebuy: { on: st.rebuyOn, untilLevel: int(st.rebuyUntil), max: int(st.rebuyMax) },
-      payout: (st.payout || E.suggestPayout(names.length)).map(Number) };
+      payout: (st.payout || E.suggestPayout(names.length)).map(Number), payoutAuto: !st.payout,
+      late: { on: st.lateOn, untilLevel: int(st.lateUntil) } };
     if (!(t.buyIn > 0)) errs.push('Buy-in in CHF eingeben.');
     if (!(t.startStack > 0)) errs.push('Startstack eingeben.');
     else if (t.startStack % unit) errs.push(`Der Startstack muss durch ${unit} teilbar sein (kleinster Chip).`);
@@ -90,6 +91,7 @@ function buildCfg(st) {
       else if (l.sb % unit || l.bb % unit) errs.push(`Level ${i + 1}: Blinds müssen durch ${unit} teilbar sein.`);
     });
     if (t.rebuy.on && !(t.rebuy.untilLevel >= 1 && t.rebuy.max >= 1)) errs.push('Rebuy: bis Level und Anzahl eingeben.');
+    if (t.late.on && !(t.late.untilLevel >= 1)) errs.push('Nachmelden: bis Level eingeben.');
     const sum = t.payout.reduce((a, b) => a + b, 0);
     if (t.payout.some((x) => !(x >= 0)) || sum !== 100) errs.push(`Preisgeld-Verteilung ergibt ${sum} % statt 100 %.`);
     if (t.payout.length > Math.max(names.length, 1)) errs.push('Mehr bezahlte Plätze als Personen.');
@@ -133,9 +135,9 @@ function viewSetup() {
   topAct.innerHTML = `<button class="btn ghost" data-a="home">Modus</button>`;
   const payout = st.payout || E.suggestPayout(st.names.filter((n) => n.trim()).length);
   return `<div class="setup">
-    <div><h2>${T ? 'Turnier' : 'Cash Game'} einrichten</h2><p class="muted">Diese Einstellungen gelten fürs ganze Spiel. Die Eingaben bleiben gespeichert, auch für das nächste Mal.</p></div>
+    <div><h1 class="h2">${T ? 'Turnier' : 'Cash Game'} einrichten</h1><p class="muted">Diese Einstellungen gelten fürs ganze Spiel. Die Eingaben bleiben gespeichert, auch für das nächste Mal.</p></div>
     <section>
-      <div class="sec-head"><h3>Spieler und Sitzordnung</h3><span class="muted">im Uhrzeigersinn, am Griff ziehen</span></div>
+      <div class="sec-head"><h2 class="h3">Spieler und Sitzordnung</h2><span class="muted"><span data-live="count"></span> · im Uhrzeigersinn, am Griff ziehen</span></div>
       <ol class="plist" id="plist">${st.names.map((n, i) => `<li data-i="${i}">
         <button class="grip" data-i="${i}" aria-label="Sitz ${i + 1} verschieben (Pfeiltasten)">${ic('grip')}</button>
         <label class="sr"><span class="seatno">Sitz ${i + 1}</span><input type="text" data-f="names.${i}" value="${esc(n)}" maxlength="20" placeholder="Name" autocomplete="off"></label>
@@ -143,7 +145,7 @@ function viewSetup() {
       ${st.names.length < 9 ? `<button class="btn" data-a="addName">+ Person</button>` : ''}
     </section>
     <section>
-      <div class="sec-head"><h3>Chips</h3><span class="muted">Farbe, Wert, vorhandene Stück</span></div>
+      <div class="sec-head"><h2 class="h3">Chips</h2><span class="muted">Farbe, Wert, vorhandene Stück</span></div>
       ${st.chips.map((c, i) => `<div class="chiprow">
         <input type="color" data-f="chips.${i}.color" value="${esc(c.color)}" aria-label="Farbe ${esc(c.name)}">
         ${fld('Name', `chips.${i}.name`, c.name, 'maxlength="12"')}
@@ -153,32 +155,68 @@ function viewSetup() {
       <button class="btn" data-a="addChip">+ Chipfarbe</button>
     </section>
     ${T ? `<section>
-      <h3>Turnier</h3>
+      <h2 class="h3">Turnier</h2>
       <div class="row">${fld('Buy-in (CHF)', 'buyIn', st.buyIn, chfO)}${fld('Startstack (Punkte)', 'startStack', st.startStack, numO)}${fld('Levellänge (Min.)', 'levelMin', st.levelMin, numO)}</div>
-      <div class="sec-head"><h3>Blinds pro Level</h3><span class="muted">Small / Big Blind</span></div>
-      <div class="levels">${st.levels.map((l, i) => `<div class="lvl"><span>${i + 1}</span>
+      <p class="live" data-live="pool"></p>
+      <div class="sec-head"><h2 class="h3">Blinds pro Level</h2><span class="muted">Small / Big Blind</span></div>
+      <div class="levels">${st.levels.map((l, i) => `<div class="lvl"><span>${i + 1}<small data-live="lvt.${i}"></small></span>
         <input type="text" data-f="levels.${i}.sb" value="${esc(l.sb)}" ${numO} aria-label="Level ${i + 1} Small Blind">
         <input type="text" data-f="levels.${i}.bb" value="${esc(l.bb)}" ${numO} aria-label="Level ${i + 1} Big Blind">
         <button class="btn ghost icon" data-a="delLevel" data-i="${i}" aria-label="Level ${i + 1} entfernen">${ic('x')}</button></div>`).join('')}</div>
+      <p class="live" data-live="dur"></p>
       <button class="btn" data-a="addLevel">+ Level</button>
       <label class="check"><input type="checkbox" data-f="rebuyOn" ${st.rebuyOn ? 'checked' : ''}> Rebuys erlauben</label>
-      ${st.rebuyOn ? `<div class="row">${fld('bis und mit Level', 'rebuyUntil', st.rebuyUntil, numO)}${fld('pro Person höchstens', 'rebuyMax', st.rebuyMax, numO)}</div>` : ''}
-      <div class="sec-head"><h3>Preisgeld</h3><button class="link" data-a="payoutAuto">Vorschlag übernehmen</button></div>
+      ${st.rebuyOn ? `<div class="row">${fld('bis und mit Level', 'rebuyUntil', st.rebuyUntil, numO)}${fld('pro Person höchstens', 'rebuyMax', st.rebuyMax, numO)}</div><p class="live" data-live="rebuy"></p>` : ''}
+      <label class="check"><input type="checkbox" data-f="lateOn" ${st.lateOn ? 'checked' : ''}> Nachmelden erlauben (wer später kommt, zahlt den Buy-in und steigt mit dem Startstack ein)</label>
+      ${st.lateOn ? `<div class="row">${fld('bis und mit Level', 'lateUntil', st.lateUntil, numO)}</div><p class="live" data-live="late"></p>` : ''}
+      <div class="sec-head"><h2 class="h3">Preisgeld</h2>${st.payout ? '<button class="link" data-a="payoutAuto">Wieder automatisch</button>' : '<span class="muted">passt sich automatisch an</span>'}</div>
+      <p class="muted">${st.payout ? 'Eigene Verteilung. «Wieder automatisch» passt sie an die Anzahl Personen an.' : 'Bis 3 Personen bekommt der Sieger alles, mit 4–5 gibt es 70/30, ab 6 50/30/20. Eine Zahl ändern = eigene Verteilung.'}</p>
       <div class="levels" id="payout">${payoutRows(payout)}</div>
+      <p class="live" data-live="pzsum"></p>
       <button class="btn" data-a="addPay">+ bezahlter Platz</button>
     </section>` : `<section>
-      <h3>Cash Game</h3>
+      <h2 class="h3">Cash Game</h2>
       <div class="row">${fld('Punkte', 'cPoints', st.cPoints, numO)}${fld('= CHF', 'cChf', st.cChf, chfO)}</div>
       <div class="row">${fld('Small Blind', 'sb', st.sb, numO)}${fld('Big Blind', 'bb', st.bb, numO)}</div>
+      <p class="live" data-live="conv"></p>
       <div class="row">${fld('Einkauf mindestens (CHF)', 'minBuy', st.minBuy, chfO)}${fld('höchstens (CHF)', 'maxBuy', st.maxBuy, chfO)}</div>
       ${fld('Einkauf zu Beginn pro Person (CHF)', 'firstBuy', st.firstBuy, chfO)}
+      <p class="live" data-live="first"></p>
     </section>`}
     <section id="derived">${derived()}</section>
   </div>`;
 }
 const payoutRows = (payout) => payout.map((p, i) => `<div class="payrow"><span>Platz ${i + 1}</span>
-  <input type="text" data-f="payout.${i}" value="${esc(p)}" ${numO} aria-label="Platz ${i + 1} in Prozent">
+  <label class="pct"><input type="text" data-f="payout.${i}" value="${esc(p)}" ${numO} aria-label="Platz ${i + 1} in Prozent"><span>%</span><b data-live="pz.${i}"></b></label>
   <button class="btn ghost icon" data-a="delPay" data-i="${i}" aria-label="Platz ${i + 1} entfernen">${ic('x')}</button></div>`).join('');
+// Live-Werte unter den Feldern: werden bei jeder Eingabe neu gerechnet, ohne die Felder neu zu zeichnen
+const hm = (min) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`;
+function live() {
+  const st = S.setup; if (!st) return;
+  const n = st.names.filter((x) => x.trim()).length;
+  const set = (k, v) => app.querySelectorAll(`[data-live="${k}"]`).forEach((el) => { el.textContent = v; });
+  set('count', `${n} ${n === 1 ? 'Person' : 'Personen'}`);
+  if (st.mode === 'tournament') {
+    const buy = rp(st.buyIn), lm = int(st.levelMin), payout = (st.payout || E.suggestPayout(n)).map(Number);
+    const pool = n * buy, ok = buy > 0 && n > 0;
+    set('pool', ok ? `Preistopf: ${n} × ${chf(buy)} = ${chf(pool)}${st.rebuyOn || st.lateOn ? ' – Rebuys und Nachmeldungen kommen dazu' : ''}.` : '');
+    st.levels.forEach((_, i) => set(`lvt.${i}`, lm > 0 ? `ab ${hm(i * lm)}` : ''));
+    set('dur', lm > 0 ? `Alle ${st.levels.length} Levels dauern ${hm(st.levels.length * lm)} h, danach bleibt das letzte Level.` : '');
+    const ru = int(st.rebuyUntil), lu = int(st.lateUntil);
+    set('rebuy', ru > 0 && lm > 0 ? `Rebuys bis ${hm(ru * lm)} h nach dem Start, je ${chf(buy || 0)} für ${pts(int(st.startStack) || 0)} Chips.` : '');
+    set('late', lu > 0 && lm > 0 ? `Nachmelden bis ${hm(lu * lm)} h nach dem Start. Preisgeld und Verteilung passen sich dann an.` : '');
+    const pz = ok ? E.prizes(pool, payout) : [];
+    payout.forEach((_, i) => set(`pz.${i}`, ok && Number.isFinite(payout[i]) ? `= ${chf(pz[i])}` : ''));
+    const sum = payout.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
+    set('pzsum', `Summe ${sum} %${sum === 100 ? '' : ' – muss 100 % ergeben'}${payout.length > n && n ? ` · ${payout.length} bezahlte Plätze bei nur ${n} Personen` : ''}`);
+  } else {
+    const ptsC = int(st.cPoints), r = rp(st.cChf), sb = int(st.sb), bb = int(st.bb), fb = rp(st.firstBuy);
+    const toC = (x) => chf(Math.round((x * r) / ptsC));
+    const ok = ptsC > 0 && r > 0;
+    set('conv', ok ? `1 Punkt = ${toC(1)}${sb > 0 && bb > 0 ? ` · Blinds ${sb}/${bb} = ${toC(sb)} / ${toC(bb)}` : ''}` : '');
+    set('first', ok && fb > 0 ? `= ${pts(Math.round((fb * ptsC) / r))} Punkte pro Person · zusammen ${chf(fb * n)} am Tisch` : '');
+  }
+}
 function derived() {
   const { cfg, errs } = buildCfg(S.setup);
   const n = Math.max(cfg.names.length, 1);
@@ -186,7 +224,7 @@ function derived() {
   if (!errs.length) {
     const amount = stackFor(cfg), s = E.suggestChips(cfg.chips, amount, n);
     const totalValue = cfg.chips.reduce((a, c) => a + c.value * c.count, 0);
-    out += `<h3>Chips pro Person (${pts(amount)})</h3><div class="dist">${s.counts.map((k, i) => k ? `<span><i class="dot" style="background:${esc(cfg.chips[i].color)}"></i>${k} × ${esc(cfg.chips[i].name)} (${cfg.chips[i].value})</span>` : '').join('')}</div>`;
+    out += `<h2 class="h3">Chips pro Person (${pts(amount)})</h2><div class="dist">${s.counts.map((k, i) => k ? `<span><i class="dot" style="background:${esc(cfg.chips[i].color)}"></i>${k} × ${esc(cfg.chips[i].name)} (${cfg.chips[i].value})</span>` : '').join('')}</div>`;
     if (totalValue < amount * n) out += `<div class="notice bad">${ic('alert')}<div class="grow">Die Chips reichen nicht: ${n} × ${pts(amount)} = ${pts(amount * n)}, vorhanden sind nur ${pts(totalValue)}.</div></div>`;
     else if (s.rest) out += `<div class="notice bad">${ic('alert')}<div class="grow">Mit diesen Chips lassen sich ${pts(amount)} nicht für alle ${n} genau legen (es fehlen ${pts(s.rest)} pro Person). Mehr kleine Chips erfassen oder den Betrag ändern.</div></div>`;
   }
@@ -218,14 +256,15 @@ function viewTable() {
   html += `<div class="hint" aria-live="polite">${esc(g.hint || 'Los geht’s.')}</div>`;
   html += seatsHtml(g);
   html += `<div class="actions">${actionsHtml(g)}</div>`;
-  return `<div class="table">${html}</div>`;
+  return `<h1 class="sr-only">Pokertisch</h1><div class="table">${html}</div>`;
 }
 
 function timerHtml(g) {
   const lv = E.blindsNow(g), nx = g.t.levels[g.timer.level + 1], cu = E.colorUp(g);
   const paused = g.timer.since == null;
   return `<div class="timer ${paused ? 'paused' : ''}">
-    <span class="lv"><b>Level ${g.timer.level + 1} · ${lv.sb}/${lv.bb}</b><span class="muted">${nx ? `danach ${nx.sb}/${nx.bb}` : 'letztes Level'}${paused ? ' · pausiert' : ''}</span></span>
+    <span class="lv"><b>Level ${g.timer.level + 1} · ${lv.sb}/${lv.bb}</b><span class="muted">${nx ? `danach ${nx.sb}/${nx.bb}` : 'letztes Level'}${paused ? ' · pausiert' : ''}</span>
+      <button class="link pool" data-a="players">Preistopf ${chf(E.prizePool(g))} · ${g.players.filter((p) => p.status !== 'out').length} von ${g.players.length} im Spiel</button></span>
     <span class="clock num" id="clock">${clock(E.timeLeft(g, Date.now()))}</span>
     <button class="btn icon" data-a="timer" aria-label="${paused ? 'Timer starten' : 'Timer pausieren'}">${ic(paused ? 'play' : 'pause')}</button>
   </div>${cu.length && g.cuSeen !== g.timer.level ? `<div class="notice">${ic('alert')}<div class="grow"><span><b>Color-up lohnt sich:</b> ${cu.map((c) => esc(c.name) + ' (' + c.value + ')').join(', ')} braucht es für diese Blinds nicht mehr. Zwischen zwei Händen gegen grössere Chips tauschen, danach «Chips zählen».</span></div><button class="btn ghost icon" data-a="cuSeen" aria-label="Hinweis ausblenden">${ic('x')}</button></div>` : ''}`;
@@ -297,7 +336,7 @@ function actionsHtml(g) {
     ${ready >= 2 ? `<button class="btn primary big wide" data-a="startHand">Hand ${g.handNo + 1} starten<small>Blinds ${bl.sb}/${bl.bb}</small></button>`
       : `<p>Es braucht mindestens 2 Personen mit Chips. ${g.mode === 'cash' ? 'Unter «Spieler» nachkaufen oder jemanden zurückholen.' : ''}</p>`}
     <div class="minis">
-      <button class="btn" data-a="players">${g.mode === 'cash' ? 'Spieler · Nachkauf' : 'Stacks'}</button>
+      <button class="btn" data-a="players">${g.mode === 'cash' ? 'Spieler · Nachkauf' : E.canLateJoin(g) ? 'Stacks · Nachmelden' : 'Stacks · Preisgeld'}</button>
       <button class="btn" data-a="count">Chips zählen</button>
       <button class="btn ghost" data-a="end">Spiel beenden</button>
     </div></div>`;
@@ -368,9 +407,21 @@ function playersDlg(msg = '') {
   const rows = [...g.players].sort(S.sort === 'stack' ? (a, b) => b.stack - a.stack : S.sort === 'name' ? (a, b) => a.name.localeCompare(b.name, 'de-CH') : (a, b) => seat.get(a.id) - seat.get(b.id));
   const statusTxt = (p) => ({ active: 'spielt', paused: 'Pause', left: 'ausgestiegen', out: `Platz ${p.place}`, bust: 'keine Chips' }[p.status]);
   const sortBtn = (k, l) => `<button data-a="sort" data-v="${k}" aria-pressed="${S.sort === k}">${l}${S.sort === k ? ' ▾&#xFE0E;' : ''}</button>`;
-  let html = `${head(cash ? 'Spieler und Stacks' : 'Stacks')}
+  let html = `${head(cash ? 'Spieler und Stacks' : 'Stacks und Preisgeld')}
     <table class="tbl"><thead><tr><th>${sortBtn('seat', 'Sitz')}</th><th>${sortBtn('name', 'Name')}</th><th class="r">${sortBtn('stack', 'Stack')}</th>${cash && S.showChf ? '<th class="r">CHF</th>' : ''}</tr></thead>
     <tbody>${rows.map((p) => `<tr><td>${seat.get(p.id) + 1}</td><td>${esc(p.name)}<br><span class="muted">${statusTxt(p)}${p.rebuys ? ` · ${p.rebuys} Rebuy` : ''}</span></td><td class="r">${pts(p.stack)}</td>${cash && S.showChf ? `<td class="r">${chf(E.toChf(g, p.stack))}</td>` : ''}</tr>`).join('')}</tbody></table>`;
+  if (!cash) {
+    const pool = E.prizePool(g), pc = E.payoutOf(g), pz = E.prizes(pool, pc), rb = g.players.reduce((a, p) => a + p.rebuys, 0);
+    html += `<h3>Preisgeld jetzt</h3>
+      <p class="muted">${g.players.length} Personen${rb ? ` + ${rb} Rebuy${rb > 1 ? 's' : ''}` : ''} = ${chf(pool)}${g.t.payoutAuto ? ' · Verteilung passt sich der Anzahl Personen an' : ''}</p>
+      <table class="tbl"><tbody>${pc.map((x, i) => `<tr><td>Platz ${i + 1}</td><td class="r">${x} %</td><td class="r"><b>${chf(pz[i])}</b></td></tr>`).join('')}</tbody></table>`;
+    if (E.canLateJoin(g)) {
+      html += between ? `<h3>Nachmelden</h3><p class="muted">Zahlt ${chf(g.t.buyIn)} und bekommt ${pts(g.t.startStack)} Chips. Erlaubt bis und mit Level ${g.t.late.untilLevel}.</p>
+        <label>Name<input type="text" id="newName" maxlength="20" autocomplete="off"></label>
+        <label>Sitzt links von<select id="newAfter">${g.players.filter((p) => p.status !== 'out').map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label>
+        <button class="btn primary" data-a="addPlayer">Nachmelden</button>` : `<p class="muted">Nachmelden geht zwischen den Händen.</p>`;
+    }
+  }
   if (cash) {
     html += `<label class="check"><input type="checkbox" id="showChf" ${S.showChf ? 'checked' : ''}> Stacks auch in CHF zeigen</label>`;
     if (!between) html += `<p class="muted">Nachkaufen, Pausen und Aussteigen gehen zwischen den Händen.</p>`;
@@ -399,7 +450,7 @@ function historyDlg() {
 
 function menuDlg(confirmNew = false) {
   openDlg(`${head('Menü')}<div class="menu">
-    <button class="btn" data-a="players">${S.game.mode === 'cash' ? 'Spieler, Stacks, Nachkauf' : 'Stacks'}</button>
+    <button class="btn" data-a="players">${S.game.mode === 'cash' ? 'Spieler, Stacks, Nachkauf' : 'Stacks und Preisgeld'}</button>
     <button class="btn" data-a="count">Chips zählen</button>
     <button class="btn" data-a="history">Hand-Historie</button>
     <button class="btn" data-a="end">Spiel beenden und abrechnen</button>
@@ -419,12 +470,12 @@ function viewEnd() {
     '', pay.length ? 'Zahlungen (z. B. TWINT):' : 'Keine Zahlungen nötig.',
     ...pay.map((p) => `${p.from} → ${p.to}: ${chf(p.amount)}`)].join('\n');
   return `<div class="endpage">
-    <h2>Abrechnung ${T ? 'Turnier' : 'Cash Game'}</h2>
+    <h1 class="h2">Abrechnung ${T ? 'Turnier' : 'Cash Game'}</h1>
     ${r.sum !== 0 ? `<div class="notice bad" role="alert">${ic('alert')}<div class="grow"><b>Die Summe ergibt ${chf(r.sum)} statt 0.</b><span>Irgendwo stimmen Chips oder Einkäufe nicht. Zurück zum Spiel und «Chips zählen».</span></div></div>` : ''}
     <table class="tbl"><thead><tr>${T ? '<th>Platz</th>' : ''}<th>Name</th><th class="r">${T ? 'Einsatz' : 'Eingekauft'}</th><th class="r">${T ? 'Preisgeld' : 'Ausbezahlt'}</th><th class="r">+/−</th></tr></thead>
     <tbody>${r.rows.map((x) => `<tr>${T ? `<td>${x.place}.</td>` : ''}<td>${esc(x.name)}${x.rebuys ? `<br><span class="muted">${x.rebuys} Rebuy</span>` : ''}</td><td class="r">${chf(x.paid)}</td><td class="r">${chf(x.out)}</td><td class="r">${sign(x.net)}</td></tr>`).join('')}</tbody></table>
     ${T ? `<p>Total Einsätze inkl. Rebuys: <b>${chf(r.pool)}</b></p>` : ''}
-    <section class="endsec"><h3>Wer zahlt wem</h3>${pay.length ? `<ul>${pay.map((p) => `<li><b>${esc(p.from)}</b> → <b>${esc(p.to)}</b>: ${chf(p.amount)}</li>`).join('')}</ul>` : '<p>Keine Zahlungen nötig.</p>'}
+    <section class="endsec"><h2 class="h3">Wer zahlt wem</h2>${pay.length ? `<ul>${pay.map((p) => `<li><b>${esc(p.from)}</b> → <b>${esc(p.to)}</b>: ${chf(p.amount)}</li>`).join('')}</ul>` : '<p>Keine Zahlungen nötig.</p>'}
     <label>Text für den Gruppenchat<textarea id="endText" readonly>${esc(text)}</textarea></label>
     <button class="btn primary wide" data-a="copy">${ic('copy')} Text kopieren</button><span id="copyOk" class="muted" aria-live="polite"></span></section>
     <div class="minis"><button class="btn" data-a="reopen">Zurück zum Spiel</button><button class="btn ghost" data-a="newGame2">Neues Spiel</button></div>
@@ -435,6 +486,7 @@ function viewEnd() {
 function render() {
   const v = S.view === 'table' && S.game?.ended ? 'end' : S.view;
   app.innerHTML = v === 'setup' ? viewSetup() : v === 'table' ? viewTable() : v === 'end' ? viewEnd() : viewHome();
+  if (v === 'setup') live();
 }
 
 // ---------- Aktionen ----------
@@ -494,7 +546,7 @@ const A = {
   pause: (el) => dlgRun(`${pName(S.game, el.dataset.id)} pausiert`, (g) => E.setPaused(g, el.dataset.id, true)),
   resume: (el) => dlgRun(`${pName(S.game, el.dataset.id)} spielt wieder`, (g) => E.setPaused(g, el.dataset.id, false)),
   cashout: (el) => dlgRun(`${pName(S.game, el.dataset.id)} ausgestiegen`, (g) => E.cashOut(g, el.dataset.id)),
-  addPlayer: () => dlgRun('Person dazugesetzt', (g) => E.addPlayer(g, $('#newName').value, $('#newAfter').value, rp($('#newBuy').value))),
+  addPlayer: () => dlgRun('Person dazugesetzt', (g) => E.addPlayer(g, $('#newName').value, $('#newAfter').value, rp($('#newBuy')?.value ?? ''))),
   end: () => {
     if (dlg.open) dlg.close();
     run('Spiel beendet', (g) => { if (g.hand && !g.hand.done) throw new Error('Zuerst die laufende Hand fertig spielen (oder rückgängig machen).'); g.ended = true; });
@@ -539,6 +591,9 @@ app.addEventListener('input', (e) => {
   $('#derived').innerHTML = derived();
   // Preisgeld-Vorschlag folgt der Anzahl Personen, solange niemand ihn von Hand geändert hat
   if (path[0] === 'names' && !S.setup.payout && $('#payout')) $('#payout').innerHTML = payoutRows(E.suggestPayout(S.setup.names.filter((n) => n.trim()).length));
+  // Erste eigene Änderung am Preisgeld: Kopfzeile auf «eigene Verteilung» umstellen (ohne das Feld zu verlieren)
+  if (path[0] === 'payout' && !$('[data-a=payoutAuto]')) { const pos = e.target.selectionStart; render(); const el = app.querySelector(`[data-f="${f}"]`); el?.focus(); el?.setSelectionRange(pos, pos); }
+  live();
 });
 dlg.addEventListener('input', (e) => {
   if (e.target.id === 'betIn') { const v = int(e.target.value); $('#betLbl').textContent = Number.isNaN(v) ? '…' : pts(v); }

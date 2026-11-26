@@ -224,3 +224,24 @@ test('Chip-Vorschlag und Warnung bei zu wenig Chips', () => {
   const few = E.DEFAULT_CHIPS.map((c) => ({ ...c, count: 10 }));
   assert.ok(E.suggestChips(few, 2000, 9).rest > 0);
 });
+
+test('Preisgeld passt sich an: Rebuy, Nachmelden, automatische Verteilung', () => {
+  const g = T(['A', 'B', 'C', 'D', 'E'], { payoutAuto: true, late: { on: true, untilLevel: 2 }, rebuy: { on: true, untilLevel: 2, max: 1 } });
+  assert.deepEqual(E.payoutOf(g), [70, 30]);
+  assert.deepEqual(E.prizes(E.prizePool(g), E.payoutOf(g)), [7000, 3000]);
+  E.addPlayer(g, 'F', id(g, 'E'));
+  assert.equal(g.players.length, 6); assert.equal(stack(g, 'F'), 2000); assert.equal(E.chipCheck(g).diff, 0);
+  assert.deepEqual(E.payoutOf(g), [50, 30, 20], 'ab 6 Personen 3 bezahlte Plätze');
+  assert.deepEqual(E.prizes(E.prizePool(g), E.payoutOf(g)), [6000, 3600, 2400]);
+  assert.throws(() => E.addPlayer(g, 'f', null), /gibt es schon/);
+  g.timer.level = 2; // Level 3
+  assert.throws(() => E.addPlayer(g, 'G', null), /nicht \(mehr\) erlaubt/);
+  const r = E.results(g); assert.equal(r.pool, 12000); assert.equal(r.sum, 0);
+});
+
+test('Preisgeld: Rest an Platz 1, eigene Verteilung bleibt', () => {
+  assert.deepEqual(E.prizes(5500, [70, 30]), [3900, 1600]);
+  const g = T(['A', 'B', 'C', 'D', 'E', 'F'], { payout: [60, 40], payoutAuto: false });
+  assert.deepEqual(E.payoutOf(g), [60, 40]);
+  assert.throws(() => E.addPlayer(g, 'G', null), /nicht \(mehr\) erlaubt/, 'Turnier ohne Nachmelden');
+});
