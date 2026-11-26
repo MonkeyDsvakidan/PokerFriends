@@ -10,7 +10,8 @@
   --chip-d:#f4f1e8; --on-chip-d:#111;            /* Dealer-Button (weiss wie echt) */
   --bar-bg:#151419; --bar-line:rgb(255 255 255 / .08); --bar-idle:#8f8a99;
   --gm-mb:#ff3fa4; --gm-quiz:#ffd166; --gm-tg:#ff8a3d; --gm-poker:#3ddc97; --gm-tools:#c9c4d3;
-  --gmbar-h:calc(58px + env(safe-area-inset-bottom));
+  --gmbar-h:calc(58px + env(safe-area-inset-bottom)); /* Platz unten (Handy) */
+  --gmbar-top:0px;         /* Platz oben – am Computer sitzt die Leiste oben (wie Music Battle U.3) */
   --f-text:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-title:"Barlow Condensed","Barlow",system-ui,sans-serif;
   --f-num:"Bungee","Arial Black",Impact,sans-serif;
@@ -203,4 +204,15 @@ textarea{width:100%;min-height:160px;padding:var(--s3);border-radius:var(--r-s);
   .gmbar{position:static}
   .shell{padding-bottom:var(--s4)}
   .actions,.sticky{bottom:var(--s2)}
+}
+/* Am Computer (ab 820 px, nicht Handy quer): Leiste oben als kompakte Reihe – gleich wie Music Battle und TotalGuesser */
+@media (min-width:820px) and (min-height:521px){
+  :root{--gmbar-h:0px;--gmbar-top:52px}
+  body{padding-top:var(--gmbar-top)}
+  .gmbar{top:0;bottom:auto;display:flex;justify-content:center;align-items:center;gap:var(--s1);height:var(--gmbar-top);
+    padding:0 var(--s4);border-top:0;border-bottom:1px solid var(--bar-line)}
+  .gmbar a{display:flex;align-items:center;gap:var(--s2);min-height:40px;padding:0 var(--s3);border-radius:999px;font-size:14px}
+  .gmbar svg{width:18px;height:18px}
+  .gmbar a[aria-current]{background:color-mix(in srgb,var(--act) 14%,transparent)}
+  .gmbar a[aria-current]::before{display:none}
 }
