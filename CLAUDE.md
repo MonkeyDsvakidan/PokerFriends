@@ -1,8 +1,8 @@
-# CLAUDE.md – pokerfriends (Poker-Spielleiter für Texas Hold'em)
+# CLAUDE.md – PokerFriends (Poker-Spielleiter für Texas Hold'em)
 
 Private Web-App von Aladin für Pokerabende mit Freunden (3–9 Personen). Echte Karten und Chips bleiben auf dem Tisch; die App ist nur der **Spielleiter**: wer dran ist, was gesetzt werden darf, Pots und Side-Pots, Chipstände, Blind-Timer und die Abrechnung in CHF. Ein Handy oder Tablet liegt in der Mitte des Tisches.
 
-Live: `https://monkeydsvakidan.github.io/pokerfriends/` – Teil der App **GameMaster** (Startseite und Manifest im Repo `monkeydsvakidan.github.io`, dort steht auch die Anleitung «Neues Spiel einbauen»).
+Live: `https://monkeydsvakidan.github.io/PokerFriends/` – Teil der App **GameMaster** (Startseite und Manifest im Repo `monkeydsvakidan.github.io`, dort steht auch die Anleitung «Neues Spiel einbauen»).
 
 ## Warum das Repo öffentlich ist
 GitHub Pages (Gratis-Plan) geht nur mit öffentlichen Repos. Vom Nutzer am 26.11.2026 ausdrücklich so entschieden (Ausnahme von «neue Repos privat»). Deshalb: **nie Geheimnisse oder echte Daten ins Repo** – die App braucht keine (kein Server, kein Login, keine Datenbank).
@@ -26,7 +26,7 @@ GitHub Pages (Gratis-Plan) geht nur mit öffentlichen Repos. Vom Nutzer am 26.11
 
 ## Testen
 - Spiellogik: `node --test` (oder `npm test`), läuft auch automatisch bei jedem Pull Request (`.github/workflows/test.yml`).
-- Oberfläche: Startseiten-Repo und dieses Repo nebeneinander lokal ausliefern, damit `/icon-180.png` und `/manifest.webmanifest` gefunden werden, z. B. Ordner `site/` mit dem Inhalt von `monkeydsvakidan.github.io` und darin `Poker` → dieses Repo, dann `python3 -m http.server` in `site/` und `http://localhost:8000/pokerfriends/` bei 375 px, Querformat (844×390) und 1280 px ansehen. Durchspielen: Turnier mit Raise/Showdown/Split, Rückgängig, Neu laden (Stand bleibt), Cash mit All-in, Nachkauf, neue Person, Abrechnung.
+- Oberfläche: Startseiten-Repo und dieses Repo nebeneinander lokal ausliefern, damit `/icon-180.png` und `/manifest.webmanifest` gefunden werden, z. B. Ordner `site/` mit dem Inhalt von `monkeydsvakidan.github.io` und darin `Poker` → dieses Repo, dann `python3 -m http.server` in `site/` und `http://localhost:8000/PokerFriends/` bei 375 px, Querformat (844×390) und 1280 px ansehen. Durchspielen: Turnier mit Raise/Showdown/Split, Rückgängig, Neu laden (Stand bleibt), Cash mit All-in, Nachkauf, neue Person, Abrechnung.
 
 ## Regeln für die Arbeit
 - Änderungen als Pull Request, nie direkt auf `main`, ein PR pro Thema.
