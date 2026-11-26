@@ -1,5 +1,5 @@
 // Poker-Spielleiter – Oberfläche. Die Regeln stehen in engine.js; hier nur Anzeige, Eingaben und Speichern.
-import * as E from './engine.js?v=2';
+import * as E from './engine.js?v=3';
 
 const KEY = 'poker-spielleiter-v1';
 const UNDO_MAX = 25;
@@ -199,12 +199,12 @@ function live() {
   if (st.mode === 'tournament') {
     const buy = rp(st.buyIn), lm = int(st.levelMin), payout = (st.payout || E.suggestPayout(n)).map(Number);
     const pool = n * buy, ok = buy > 0 && n > 0;
-    set('pool', ok ? `Preistopf: ${n} × ${chf(buy)} = ${chf(pool)}${st.rebuyOn || st.lateOn ? ' – Rebuys und Nachmeldungen kommen dazu' : ''}.` : '');
+    set('pool', ok ? `Preistopf: ${n} × ${chf(buy)} = ${chf(pool)}${st.rebuyOn || st.lateOn ? ' – Rebuys und Nachmeldungen kommen dazu' : ''}` : '');
     st.levels.forEach((_, i) => set(`lvt.${i}`, lm > 0 ? `ab ${hm(i * lm)}` : ''));
-    set('dur', lm > 0 ? `Alle ${st.levels.length} Levels dauern ${hm(st.levels.length * lm)} h, danach bleibt das letzte Level.` : '');
+    set('dur', lm > 0 ? `Alle ${st.levels.length} Levels dauern ${hm(st.levels.length * lm)} h, danach bleibt das letzte Level` : '');
     const ru = int(st.rebuyUntil), lu = int(st.lateUntil);
-    set('rebuy', ru > 0 && lm > 0 ? `Rebuys bis ${hm(ru * lm)} h nach dem Start, je ${chf(buy || 0)} für ${pts(int(st.startStack) || 0)} Chips.` : '');
-    set('late', lu > 0 && lm > 0 ? `Nachmelden bis ${hm(lu * lm)} h nach dem Start. Preisgeld und Verteilung passen sich dann an.` : '');
+    set('rebuy', ru > 0 && lm > 0 ? `Rebuys bis ${hm(ru * lm)} h nach dem Start, je ${chf(buy || 0)} für ${pts(int(st.startStack) || 0)} Chips` : '');
+    set('late', lu > 0 && lm > 0 ? `Nachmelden bis ${hm(lu * lm)} h nach dem Start, Preisgeld und Verteilung passen sich dann an` : '');
     const pz = ok ? E.prizes(pool, payout) : [];
     payout.forEach((_, i) => set(`pz.${i}`, ok && Number.isFinite(payout[i]) ? `= ${chf(pz[i])}` : ''));
     const sum = payout.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
@@ -243,7 +243,7 @@ function viewTable() {
     <button class="btn ghost icon" data-a="menu" aria-label="Menü">${ic('menu')}</button>`;
   let html = '';
   if (S.saveFail) html += `<div class="notice bad">${ic('alert')}<div class="grow">Speichern im Browser klappt nicht (privates Fenster oder Speicher voll). Die Seite nicht neu laden, sonst ist der Stand weg.</div></div>`;
-  if (chk.diff) html += `<div class="notice bad" role="alert">${ic('alert')}<div class="grow"><b>Chips stimmen nicht!</b>
+  if (chk.diff) html += `<div class="notice bad" role="alert">${ic('alert')}<div class="grow"><b>Chips stimmen nicht</b>
     <span>Stacks + Pot = ${pts(chk.actual)}, ausgegeben wurden ${pts(chk.expected)} (${chk.diff > 0 ? '+' : ''}${pts(chk.diff)}).</span>
     <div class="minis"><button class="btn" data-a="count">Chips zählen</button><button class="btn ghost" data-a="acceptDiff">Abweichung übernehmen</button></div></div></div>`;
   if (S.err) html += `<div class="notice bad" role="alert">${ic('alert')}<div class="grow">${esc(S.err)}</div><button class="btn ghost icon" data-a="clearErr" aria-label="Meldung schliessen">${ic('x')}</button></div>`;
@@ -396,7 +396,7 @@ function countUpdate() {
   if (Number.isNaN(v)) { out.innerHTML = `<p class="err">Bitte nur ganze Zahlen eingeben.</p>`; btn.disabled = true; return; }
   const d = v - p.stack;
   out.innerHTML = d ? `<div class="notice bad">${ic('alert')}<div class="grow">Laut App ${pts(p.stack)}, gezählt ${pts(v)}: Abweichung <b>${d > 0 ? '+' : ''}${pts(d)}</b>.</div></div>`
-    : `<div class="notice">Stimmt: ${pts(v)}.</div>`;
+    : `<div class="notice">Stimmt: ${pts(v)}</div>`;
   btn.disabled = !d;
   btn.textContent = d ? `Stand auf ${pts(v)} korrigieren` : 'Stand korrigieren';
 }
